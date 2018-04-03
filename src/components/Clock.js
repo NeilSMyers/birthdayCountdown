@@ -8,10 +8,15 @@ class Clock extends Component {
     this.timer = 0;
     this.birthday = props.birthdayFormState.startDate.toString();
     this.getTimeRemaining = this.getTimeRemaining.bind(this);
+    this.noBirthYear = new Date(this.birthday).getFullYear() == new Date().getFullYear();
 
     this.state = {
       timeRemaining: this.getTimeRemaining(props.birthdayFormState.startDate.toString())
     }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    console.log(`next props: ${JSON.stringify(nextProps)}`)
   }
 
   getTimeRemaining(birthday) {
@@ -36,6 +41,9 @@ class Clock extends Component {
       else if (birthDay < currentDay) {
         bday.setFullYear(today.getFullYear() + 1);
       }
+      else if (birthDay == currentDay) {
+        return 0;
+      }
     }
 
     var distance = bday.getTime() - today.getTime();
@@ -59,7 +67,7 @@ class Clock extends Component {
 
     var distance = today.getTime() - bday.getTime();
     var daysOld = Math.floor(distance / (1000* 60 * 60 * 24));
-    var yearsOld = Number((daysOld/365).toFixed(0));
+    var yearsOld = Number(Math.ceil(daysOld/365).toFixed(0));
 
     return yearsOld
   }.bind(this);
@@ -71,19 +79,41 @@ class Clock extends Component {
     }, 1000);
   }
 
+  componentWillUnmount() {
+    clearInterval(this.timer);
+  }
+
+  renderMessage = function() {
+    if (this.noBirthYear) {
+      return (
+        <h4>until your birthday!</h4>
+      )
+    }
+    return (
+      <h4>remaining until you are {this.getAge()}</h4>
+    )
+  }.bind(this)
+
   render() {
     const data = this.state.timeRemaining
     return (
       <div>
-        <div>
-          <div>DAYS {data.days}</div>
-          <div>HRS {data.hours}</div>
-          <div>MINS {data.minutes}</div>
-          <div>SECS {data.seconds}</div>
-        </div>
-        <div>
-          {<h4>remaining until you are {this.getAge()}</h4>}
-        </div>
+      {
+        this.state.timeRemaining == 0 ?
+          <h1>Happy Birthday!</h1>
+          :
+          <div>
+            <div>
+              <div>DAYS {data.days}</div>
+              <div>HRS {data.hours}</div>
+              <div>MINS {data.minutes}</div>
+              <div>SECS {data.seconds}</div>
+            </div>
+            <div>
+              {this.renderMessage()}
+            </div>
+          </div>
+      }
       </div>
     )
   }
